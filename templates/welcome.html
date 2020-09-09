@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>一键排版</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='sweetalert2/sweetalert2.min.css') }}">
+</head>
+<body>
+<div style="width:1200px; margin:auto">
+    <div><h1 style="text-align: center;">让我们荡起双桨！小船儿推开波浪</h1></div>
+    <div style="height:50px; line-height:50px;">
+        <div style="float:left">
+            <label>
+                <input type="checkbox" name="rule" value="space" />
+                行首空格
+            </label>
+            <label>
+                <input type="checkbox" name="rule" value="clear_a" checked="checked" />
+                清除链接
+            </label>
+            <label>
+                <input type="checkbox" name="rule" value="image" checked="checked" />
+                图片居中
+            </label>
+        </div>
+        <div style="float:right"><button onclick="autoformat()">排版</button></div>
+    </div>
+    <textarea id="content" name="content"></textarea>
+    
+</div>
+<script src="{{ url_for('static', filename='sweetalert2/sweetalert2.min.js') }}"></script>
+<script src="{{ url_for('static', filename='ckeditor/ckeditor.js') }}"></script>
+
+<script>
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+    });
+
+    const editor = CKEDITOR.replace('content', {
+    	toolbar: [
+            ["Source"],
+            ["SelectAll", "Cut", "Copy"],
+            ["Bold", "Italic", "Underline"],
+            ["BGColor", "TextColor"],
+            ["NumberedList", "BulletedList"],
+            ["JustifyLeft", "JustifyCenter", "JustifyRight"],
+            ["Image", "Table"],
+            ["Link", "Unlink"],
+            ["Undo", "Redo"]
+        ],
+        language:"zh-cn",
+        height:600,
+        width: 1200
+    });
+
+    function autoformat(){
+        let text = editor.getData()
+        let rule = []
+        document.querySelectorAll('input[name="rule"]:checked').forEach(el=>{
+            rule.push(el.value)
+        })
+        if(text.length < 10 ){
+            Toast.fire({
+                type: 'info',
+                title: '无内容,不排版'
+            })
+            return ;
+        }
+        fetch('{{ url_for("quick_format") }}', {
+            method: 'POST',
+            headers: new Headers({
+                'Content-Type': 'application/json'
+              }),
+            body: JSON.stringify({
+                'content': text,
+                'rule': rule
+            })
+        }).then(response => response.json()).then(data=>{
+            Toast.fire({
+                type: 'success',
+                title: '排版成功'
+            })
+            editor.setData(data['content'], {
+                callback: function(){
+                    this.checkDirty()
+                }
+            })
+        }).catch(error => {
+            Toast.fire({
+                type: 'error',
+                title: '系统出错'
+            })
+        })
+    }
+</script>
+</body>
+</html>
