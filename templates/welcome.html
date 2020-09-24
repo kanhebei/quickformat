@@ -30,7 +30,7 @@
         <div class="row">
             <div class="col-12">
                 <div class="row">
-                    <div class="col-11">
+                    <div class="col-8">
                         <div class="form-group clearfix">
                             <div class="icheck-primary d-inline">
                                 <input type="checkbox" id="space" name="rule" value="space" checked="checked">
@@ -46,8 +46,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-1">
-                        <button type="button" class="btn btn-secondary" id="autoformat">排版</button>
+                    <div class="col-4" style="text-align: right;">
+                        <!-- <button type="button" class="btn btn-secondary" id="paste-in">粘贴进来</button> -->
+                        <button type="button" class="btn btn-secondary" id="one-format">一键排版</button>
+                        <button type="button" class="btn btn-secondary" id="copy-out">复制出去</button>
                     </div>
                 </div>
             </div>
@@ -60,6 +62,7 @@
     <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='sweetalert2/sweetalert2.min.js') }}"></script>
     <script src="{{ url_for('static', filename='summernote/summernote-bs4.js') }}"></script>
+    <script src="{{ url_for('static', filename='clipboard/clipboard-polyfill.min.js') }}"></script>
     <script>
         const Toast = Swal.mixin({
             toast: true,
@@ -73,7 +76,22 @@
                 height: 600
             });
 
-            $('#autoformat').click(function () {
+            $('#copy-out').click(function(){
+                let item = new ClipboardItem({
+                    "text/html": new Blob([ele.summernote('code')], {type: "text/html"}),
+                    "text/plain": new Blob([ele.summernote('code')], {type: "text/plain"})
+                })
+                clipboard.write([item]).then(success => {
+                    Toast.fire({
+                        type: 'success',
+                        title: '已拷贝至剪贴板'
+                    })
+                }, fail => {
+                    alert('fail')
+                })
+            })
+
+            $('#one-format').click(function () {
                 let text = ele.summernote('code')
                 let rule = []
                 document.querySelectorAll('input[name="rule"]:checked').forEach(el => {
